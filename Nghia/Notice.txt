@@ -1,0 +1,4 @@
+Die UDP pakete sehen folgender maßen aus, 
+32bit int timestamp, 
+4x 32 bit float quaternionen, 
+3x 32 bit float korrekturdaten
