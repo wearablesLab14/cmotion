@@ -1,0 +1,28 @@
+package de.freiburg.ese.cmotion.smartwatch;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+
+import android.os.AsyncTask;
+
+public class SendQuaternionUDPTask extends AsyncTask {
+	
+
+	
+	public byte[] floatArray2ByteArray(float[] values){
+        ByteBuffer buffer = ByteBuffer.allocate(4 * values.length);
+
+        for (float value : values){
+            buffer.putFloat(value);
+        }
+
+        return buffer.array();
+    }
+
+	
+}

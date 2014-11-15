@@ -1,0 +1,68 @@
+package de.freiburg.ese.cmotion.smartwatch;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+
+import android.os.AsyncTask;
+
+public class SendQuanterniosUDPTask extends AsyncTask {
+
+	@Override
+	protected Object doInBackground(Object... params) {
+
+		
+
+		try {
+			String messageStr = "quaternions!";
+			int server_port = 5050;
+			DatagramSocket s;
+			s = new DatagramSocket();
+			InetAddress local = InetAddress.getByName("192.168.1.255");
+			int msg_length = messageStr.length();
+			byte[] message = messageStr.getBytes();
+			DatagramPacket p = new DatagramPacket(message, msg_length, local,
+					server_port);
+			s.send(p);
+
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		
+		System.out.println("message send " + System.currentTimeMillis());
+		
+		
+		
+		String data = "pony";
+		DatagramSocket socket;
+
+		
+		
+		// try {
+		// socket = new DatagramSocket(PORT);
+		// socket.setBroadcast(true);
+		// DatagramPacket packet = new DatagramPacket(data.getBytes(),
+		// data.length(), getBroadcastAddress(), 5050);
+		// socket.send(packet);
+		// } catch (SocketException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+
+		
+		return null;
+	}
+
+	
+}
