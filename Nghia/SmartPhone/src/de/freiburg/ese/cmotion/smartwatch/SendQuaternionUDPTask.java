@@ -9,7 +9,6 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import android.os.AsyncTask;
-import android.provider.Telephony.Sms.Conversations;
 import android.util.Log;
 
 public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
@@ -19,29 +18,19 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	@Override
 	protected Object doInBackground(Object... params) {
 
-		if (s == null)
-			try {
-				s = new DatagramSocket();
-			} catch (SocketException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
 		float[] quaternions = (float[]) params[0];
 		String broadcastUriString = "192.168.0.255";
 		int destPort = 5050;
+		byte[] message = floatArray2ByteArray(quaternions);
+		byte[] cMotionPaket = convertToCMotionHeader(message);
+
 		try {
-
 			InetAddress local = InetAddress.getByName(broadcastUriString);
-
-			int msgLength = quaternions.length;
-			byte[] message = floatArray2ByteArray(quaternions);
-			byte[] cMotionPaket = convertToCMotionHeader(message);
-			msgLength = message.length;
 			DatagramPacket p = new DatagramPacket(cMotionPaket,
 					cMotionPaket.length, local, destPort);
+			
+			s = new DatagramSocket();
 			s.send(p);
-
 		} catch (SocketException e) {
 			Log.e("", "Unable to create socket.", e);
 			// e.printStackTrace();
@@ -51,11 +40,8 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 		} catch (IOException e) {
 			Log.e("", "Failed to send UPD message.", e);
 			// e.printStackTrace();
-		} finally {
-			/*
-			 * if (s != null) { s.close(); }
-			 */
 		}
+
 		return null;
 	}
 
@@ -75,28 +61,20 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	}
 
 	/**
-	 * 4 bytes header, 
+	 * 4 bytes timestamp, 16 bytes quaternions, 12 bytes correction data
+	 * 
 	 * @param msg
 	 * @return
 	 */
-	
 	public static byte[] convertToCMotionHeader(byte[] msg) {
-		try {
 		byte[] result = new byte[32];
-		
-			int beginIndex = 4;
+		int beginIndex = 4;
+		int copyIndex = 0;
 
-			int copyIndex = 0;
-			for (int i = beginIndex; copyIndex < msg.length; i++) {
-				result[i] = msg[copyIndex++];
-			}
-
-			// System.out.println("debug");
-			return result;
-		} catch (Exception e) {
-			return null;
+		for (int i = beginIndex; copyIndex < msg.length; i++) {
+			result[i] = msg[copyIndex++];
 		}
 
-	
+		return result;
 	}
 }
