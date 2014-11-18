@@ -29,7 +29,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 			DatagramPacket p = new DatagramPacket(cMotionPaket,
 					cMotionPaket.length, local, destPort);
 			
-			s = new DatagramSocket();
+			s = GlobalState.getSocket();
 			s.send(p);
 		} catch (SocketException e) {
 			Log.e("", "Unable to create socket.", e);

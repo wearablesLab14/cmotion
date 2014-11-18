@@ -13,6 +13,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 
 import android.app.Activity;
+import android.app.Application;
 import android.app.LauncherActivity.IconResizer;
 import android.graphics.Color;
 import android.hardware.Sensor;
@@ -135,7 +136,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 					"X: " + rotationx +"\nY: " + rotationy+"\nZ: " + rotationz 
 					
 					);	
-			
+
 		this.lastValues = values;
 	}
 	
