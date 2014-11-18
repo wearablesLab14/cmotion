@@ -1,3 +1,6 @@
+/*
+ * @Slia
+ */
 package de.freiburg.ese.cmotion.smartwatch;
 
 // import com.example.eyespeedtest.R;
@@ -34,7 +37,10 @@ public class MainActivity extends Activity implements SensorEventListener {
 	// private View view;
 	private long lastUpdate;
 	private  float [] lastValues ;
-	
+	UdpSender sender  = new UdpSender();
+	SendQuaternionUDPTask async ;
+	// SendQuaternionUDPTask async = new SendQuaternionUDPTask();
+
 	Button button;
 	TextView text;
 	private float[] lastRotation;
@@ -62,20 +68,14 @@ public class MainActivity extends Activity implements SensorEventListener {
 		
 		button = (Button) findViewById(R.id.button1);
 		text = (TextView) findViewById(R.id.textView1);
-		
-		text.setTextSize(20);
-
-		
+		 
+		text.setTextSize(20);	
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
-		
-		
-		
-		
 		return true;
 	}
 
@@ -91,7 +91,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 		return super.onOptionsItemSelected(item);
 	}
 	
-	private void getAccelerometer(SensorEvent event) {
+	private void getAccelerometer(SensorEvent event) throws IOException {
 		float[] values = event.values;
 		if(this.lastRotation == null || this.lastRotation.length != 5)
 			return;
@@ -109,66 +109,47 @@ public class MainActivity extends Activity implements SensorEventListener {
 		float 	rotationz= this.lastRotation[2];
 		float[] rotation = new float[]{rotationx,rotationy,rotationz} ;
 
-			float w = (float)Math.sqrt(1
-					- rotation[0]*rotation[0] - rotation[1]*rotation[1] - rotation[2]*rotation[2]);
+//			float w = (float)Math.sqrt(1
+//					- rotation[0]*rotation[0] - rotation[1]*rotation[1] - rotation[2]*rotation[2]);
 			//In this case, the w component of the quaternion is known to be a positive number
 
 			float [] q  = new float[4];
-			float [] rv = new float[]{w, rotationx,rotationy,rotationz}; 
+			float [] rv = new float[]{ rotationx,rotationy,rotationz}; 
 		
 		sensorManager.getQuaternionFromVector(q, rv);
 		
 		float[] qq = q;
-		this.text.setText("Rotation X: " + (int)(rotationx*1000)  + "\n" + 
-				"Rotation Y: " + ((int)(rotationy*1000) )+ "\n" + 
-				"Rotation Z: " + ((int)(rotationz*1000) )+ "\n" + 
-				"\n\n\n"+
-				qq[0] + "\n" +qq[1] + "\n" + qq[2] + "\n" +qq[3] + "\n");
+	
 		
-		// float accelationSquareRoot = (x * x + y * y + z * z)
-				// / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
-		//long actualTime = System.currentTimeMillis();
-		/*
-		if (accelationSquareRoot >= 2) //
-		{
-			if (actualTime - lastUpdate < 200) {
-				return;
-			}
-			lastUpdate = actualTime;
-			Toast.makeText(this, "Device was shuffed", Toast.LENGTH_SHORT)
-					.show();
-			if (color) {
-				view.setBackgroundColor(Color.GREEN);
-
-			} else {
-				view.setBackgroundColor(Color.RED);
-			}
-			color = !color;
-		}
-		*/
+		async = new SendQuaternionUDPTask();
+		 async.execute(qq, "192.168.0.255", 5050);
+		
+		 
+			this.text.setText(
+					// "Rotation X: " + (int)(rotationx*1000)  + "\n" + 
+					// "Rotation Y: " + ((int)(rotationy*1000) )+ "\n" + 
+					// "Rotation Z: " + ((int)(rotationz*1000) )+ "\n" + 
+					// "\n\n\n"++ 
+					qq[0] + "\n" +qq[1] + "\n" + qq[2] + "\n" +qq[3] + "\n"
+					+ "Rotation \n" +
+					"X: " + rotationx +"\nY: " + rotationy+"\nZ: " + rotationz 
+					
+					);	
+			
 		this.lastValues = values;
 	}
 	
-	private static void sendingInformation(float[] infos) throws IOException
-	{
-	    String text;
-	    int server_port = 12345;
-	    byte[] message = new byte[32];
-	    DatagramPacket p = new DatagramPacket(message, message.length);
-	    
-	    DatagramSocket s = new DatagramSocket(server_port);
-	    s.receive(p);
-	    text = new String(message, 0, p.getLength());
-	    Log.d("Udp tutorial","message:" + text);
-	    s.close();
 
-		
-	}
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
 		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-			getAccelerometer(event);
+			try {
+				getAccelerometer(event);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}	else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
 		{
 				getRotationMeter(event);
@@ -178,9 +159,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 	
 
 	private void getRotationMeter(SensorEvent event) {
-		this.lastRotation =   event.values;
-		
-		
+		this.lastRotation =   event.values;	
 	}
 
 	@Override

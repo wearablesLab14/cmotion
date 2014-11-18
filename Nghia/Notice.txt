@@ -2,3 +2,9 @@ Die UDP pakete sehen folgender maßen aus,
 32bit int timestamp, 
 4x 32 bit float quaternionen, 
 3x 32 bit float korrekturdaten
+
+PRobleme bei der Daten senden
+
+UDP funktioniert nur mit 2-6 frames
+ohne asyncTask verläuft das ding total fehlerhaft wegen timeout von 1ms
+
