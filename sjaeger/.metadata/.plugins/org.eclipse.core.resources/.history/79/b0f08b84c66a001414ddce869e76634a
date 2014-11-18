@@ -1,7 +1,0 @@
-package de.freiburg.ese.cmotion.smartwatch;
-
-import android.os.AsyncTask;
-
-public class SendQuanterniosUDPTask extends AsyncTask {
-
-}

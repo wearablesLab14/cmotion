@@ -1,4 +1,0 @@
-INDEX VERSION 1.127+D:\Uni Freiburg\Wearable Computing Lab Course\workspace\cmotion\sjaeger\.metadata\.plugins\org.eclipse.jdt.core
-2264938108.index
-2363567884.index
-2672810639.index
