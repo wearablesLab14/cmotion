@@ -7,12 +7,8 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.Currency;
-import java.util.Date;
 
-import android.R.integer;
 import android.os.AsyncTask;
-import android.text.method.DateTimeKeyListener;
 import android.util.Log;
 
 public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
@@ -41,6 +37,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 				if (getCurrentTimeInMs() - msLastUpdateTime >= updateDelay
 						&& getDataQQ()) {
 
+					// update;
 					msLastUpdateTime = getCurrentTimeInMs();
 					
 					byte[] cMotionPaket = convertToSendingPaket();
@@ -49,9 +46,6 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 					s = GlobalState.getSocket();
 					s.send(p);
-
-					// update;
-				
 
 				} else {
 					// sleep
@@ -112,7 +106,6 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	 */
 	public byte[] floatArray2ByteArray(float[] values) {
 		ByteBuffer buffer = ByteBuffer.allocate(4 * values.length);
-		byte[] bytesTest = ByteBuffer.allocate(4).putLong(msLastUpdateTime).array();
 		
 		for (float value : values) {
 			buffer.putFloat(value);
@@ -122,17 +115,21 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	}
 
 	/**
-	 * 4 bytes timestamp, 16 bytes quaternions, 12 bytes correction data
+	 * 4 bytes timestamp: only last 4 bytes of timestamp
+	 * 16 bytes quaternions: data from rotation sensor
+	 * 12 bytes correction data: currently empty
 	 * 
 	 * @param msg
 	 * @return
 	 */
-	public static byte[] convertToCMotionHeader(byte[] msg) {
-			
-		
+	protected byte[] convertToCMotionHeader(byte[] msg) {
 		byte[] result = new byte[32];
-		// long to byte
+
+		// copy timestamp
+		byte[] bytesTest = ByteBuffer.allocate(8).putLong(msLastUpdateTime).array();
+		System.arraycopy(bytesTest, 4, result, 0, 4);
 		
+		// copy quaternions
 		int beginIndex = 4;
 		int copyIndex = 0;
 
