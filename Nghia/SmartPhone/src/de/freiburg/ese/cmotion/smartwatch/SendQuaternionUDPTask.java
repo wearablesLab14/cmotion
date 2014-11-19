@@ -41,6 +41,8 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 				if (getCurrentTimeInMs() - msLastUpdateTime >= updateDelay
 						&& getDataQQ()) {
 
+					msLastUpdateTime = getCurrentTimeInMs();
+					
 					byte[] cMotionPaket = convertToSendingPaket();
 					DatagramPacket p = new DatagramPacket(cMotionPaket,
 							cMotionPaket.length, address, destPort);
@@ -49,7 +51,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 					s.send(p);
 
 					// update;
-					msLastUpdateTime = getCurrentTimeInMs();
+				
 
 				} else {
 					// sleep
@@ -110,7 +112,8 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	 */
 	public byte[] floatArray2ByteArray(float[] values) {
 		ByteBuffer buffer = ByteBuffer.allocate(4 * values.length);
-
+		byte[] bytesTest = ByteBuffer.allocate(4).putLong(msLastUpdateTime).array();
+		
 		for (float value : values) {
 			buffer.putFloat(value);
 		}
@@ -125,7 +128,11 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	 * @return
 	 */
 	public static byte[] convertToCMotionHeader(byte[] msg) {
+			
+		
 		byte[] result = new byte[32];
+		// long to byte
+		
 		int beginIndex = 4;
 		int copyIndex = 0;
 
