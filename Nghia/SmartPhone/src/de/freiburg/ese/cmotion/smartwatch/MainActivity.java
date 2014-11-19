@@ -6,6 +6,7 @@ package de.freiburg.ese.cmotion.smartwatch;
 // import com.example.eyespeedtest.R;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 import android.app.Activity;
 import android.hardware.Sensor;
@@ -30,7 +31,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 	SendQuaternionUDPTask async;
 	Button button;
 	TextView text;
-	private float[] lastRotation;
+	private Object rotation;
+
+	private static float[] lastQQ = new float[4];
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,13 @@ public class MainActivity extends Activity implements SensorEventListener {
 		button = (Button) findViewById(R.id.button1);
 		text = (TextView) findViewById(R.id.textView1);
 
+		try {
+			async = new SendQuaternionUDPTask(60, "192.168.0.255", 5050);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		async.execute();
 		text.setTextSize(20);
 	}
 
@@ -78,69 +88,32 @@ public class MainActivity extends Activity implements SensorEventListener {
 		return super.onOptionsItemSelected(item);
 	}
 
-	private void getAccelerometer(SensorEvent event) throws IOException {
-		float[] values = event.values;
-		if (this.lastRotation == null || this.lastRotation.length != 5)
-			return;
-
-		// beschleunigung
-		float x = values[0];
-		float y = values[1];
-		float z = values[2];
-
-		// rotation berechnen
-
-		float rotationx = this.lastRotation[0];
-		float rotationy = this.lastRotation[1];
-		float rotationz = this.lastRotation[2];
-		float[] rotation = new float[] { rotationx, rotationy, rotationz };
-
-		// float w = (float)Math.sqrt(1
-		// - rotation[0]*rotation[0] - rotation[1]*rotation[1] -
-		// rotation[2]*rotation[2]);
-		// In this case, the w component of the quaternion is known to be a
-		// positive number
-
-		float[] q = new float[4];
-		float[] rv = new float[] { rotationx, rotationy, rotationz };
-
-		sensorManager.getQuaternionFromVector(q, rv);
-
-		float[] qq = q;
-
-		async = new SendQuaternionUDPTask();
-		async.execute(qq, "192.168.0.255", 5050);
-
-		this.text.setText(
-		// "Rotation X: " + (int)(rotationx*1000) + "\n" +
-		// "Rotation Y: " + ((int)(rotationy*1000) )+ "\n" +
-		// "Rotation Z: " + ((int)(rotationz*1000) )+ "\n" +
-		// "\n\n\n"++
-				qq[0] + "\n" + qq[1] + "\n" + qq[2] + "\n" + qq[3] + "\n"
-						+ "Rotation \n" + "X: " + rotationx + "\nY: "
-						+ rotationy + "\nZ: " + rotationz
-
-				);
-
-		this.lastValues = values;
-	}
-
 	@Override
 	public void onSensorChanged(SensorEvent event) {
 		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-			try {
-				getAccelerometer(event);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		} else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
 			getRotationMeter(event);
 		}
 	}
 
 	private void getRotationMeter(SensorEvent event) {
-		this.lastRotation = event.values;
+		float[] rotation = event.values;
+
+		float[] q = new float[4];
+		float[] rv = new float[] { rotation[0], rotation[1], rotation[2] };
+		sensorManager.getQuaternionFromVector(lastQQ, rv);
+		this.text.setText(
+		// "Rotation X: " + (int)(rotationx*1000) + "\n" +
+		// "Rotation Y: " + ((int)(rotationy*1000) )+ "\n" +
+		// "Rotation Z: " + ((int)(rotationz*1000) )+ "\n" +
+		// "\n\n\n"++
+				lastQQ[0] + "\n" + lastQQ[1] + "\n" + lastQQ[2] + "\n"
+						+ lastQQ[3] + "\n" + "Rotation \n" + "X: "
+						+ rotation[0] + "\nY: " + rotation[1] + "\nZ: "
+						+ rotation[2]
+
+				);
+
 	}
 
 	@Override
@@ -160,6 +133,10 @@ public class MainActivity extends Activity implements SensorEventListener {
 		sensorManager.registerListener(this,
 				sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
 				SensorManager.SENSOR_DELAY_NORMAL);
+	}
+
+	public static float[] getSensorData() {
+		return lastQQ;
 	}
 
 }

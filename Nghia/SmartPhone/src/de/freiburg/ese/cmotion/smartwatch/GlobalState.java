@@ -15,5 +15,4 @@ public class GlobalState extends Application {
 		}
 		return socket;
 	}
-
 }

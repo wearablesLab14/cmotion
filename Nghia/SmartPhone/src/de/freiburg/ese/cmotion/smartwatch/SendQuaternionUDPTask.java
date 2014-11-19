@@ -7,42 +7,98 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.Currency;
+import java.util.Date;
 
+import android.R.integer;
 import android.os.AsyncTask;
+import android.text.method.DateTimeKeyListener;
 import android.util.Log;
 
 public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 	DatagramSocket s;
 
+	InetAddress address;
+	int destPort;
+	float[] lastReceiveData = null;
+	int updateDelay;
+	long msLastUpdateTime;
+
+	public SendQuaternionUDPTask(int frameCounter, String uriString, int port)
+			throws UnknownHostException {
+		address = InetAddress.getByName(uriString);
+		destPort = port;
+		updateDelay = 1000 / frameCounter;
+		msLastUpdateTime = getCurrentTimeInMs();
+
+	}
+
 	@Override
 	protected Object doInBackground(Object... params) {
-
-		float[] quaternions = (float[]) params[0];
-		String broadcastUriString = "192.168.0.255";
-		int destPort = 5050;
-		byte[] message = floatArray2ByteArray(quaternions);
-		byte[] cMotionPaket = convertToCMotionHeader(message);
-
 		try {
-			InetAddress local = InetAddress.getByName(broadcastUriString);
-			DatagramPacket p = new DatagramPacket(cMotionPaket,
-					cMotionPaket.length, local, destPort);
-			
-			s = GlobalState.getSocket();
-			s.send(p);
+			while (true) {
+				if (getCurrentTimeInMs() - msLastUpdateTime >= updateDelay
+						&& getDataQQ()) {
+
+					byte[] cMotionPaket = convertToSendingPaket();
+					DatagramPacket p = new DatagramPacket(cMotionPaket,
+							cMotionPaket.length, address, destPort);
+
+					s = GlobalState.getSocket();
+					s.send(p);
+
+					// update;
+					msLastUpdateTime = getCurrentTimeInMs();
+
+				} else {
+					// sleep
+					Thread.sleep(msLastUpdateTime);
+				}
+			}
 		} catch (SocketException e) {
 			Log.e("", "Unable to create socket.", e);
 			// e.printStackTrace();
 		} catch (UnknownHostException e) {
-			Log.e("", "Host " + broadcastUriString + " is unknown.", e);
+			Log.e("", "Host " + address.getHostName() + " is unknown.", e);
 			// e.printStackTrace();
 		} catch (IOException e) {
 			Log.e("", "Failed to send UPD message.", e);
 			// e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		return null;
+	}
+
+	/*
+	 * return true, if got new datas
+	 */
+	private boolean getDataQQ() {
+		float[] qq = MainActivity.getSensorData();
+		if (qq != null && this.lastReceiveData != null
+				&& qq.length == this.lastReceiveData.length) {
+			for (int i = 0; i < qq.length; i++) {
+				if (qq[i] != this.lastReceiveData[i]) {
+					lastReceiveData = qq;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public byte[] convertToSendingPaket() {
+
+		// float to byte
+		return convertToCMotionHeader(floatArray2ByteArray(this.lastReceiveData));
+
+	}
+
+	public static long getCurrentTimeInMs() {
+		return System.currentTimeMillis();
 	}
 
 	/**
