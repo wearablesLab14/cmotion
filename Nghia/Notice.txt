@@ -5,9 +5,11 @@ Die UDP pakete sehen folgender maﬂen aus,
 
 PRobleme bei der Daten senden
 
+
 UDP funktioniert nur mit 2-6 frames
 ohne asyncTask verl‰uft das ding total fehlerhaft wegen timeout von 1ms
 
+float vergleich und debug modus funktioniert nicht ganz
 
 thread nicht andauern neu aktualisieren sondern nur die parameter umstellen (x y z lesen)
 man kann hier auch setatic methode schrieben oder die werte aktualisieren

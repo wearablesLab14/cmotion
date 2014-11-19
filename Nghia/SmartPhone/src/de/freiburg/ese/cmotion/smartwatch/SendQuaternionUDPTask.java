@@ -21,7 +21,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 	InetAddress address;
 	int destPort;
-	float[] lastReceiveData = null;
+	float[] lastReceiveData = new float[4];
 	int updateDelay;
 	long msLastUpdateTime;
 
@@ -53,7 +53,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 				} else {
 					// sleep
-					Thread.sleep(msLastUpdateTime);
+					Thread.sleep(updateDelay);
 				}
 			}
 		} catch (SocketException e) {
@@ -87,6 +87,8 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 				}
 			}
 		}
+		
+		// todo  return false
 		return false;
 	}
 
