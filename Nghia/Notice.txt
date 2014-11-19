@@ -8,3 +8,14 @@ PRobleme bei der Daten senden
 UDP funktioniert nur mit 2-6 frames
 ohne asyncTask verläuft das ding total fehlerhaft wegen timeout von 1ms
 
+
+thread nicht andauern neu aktualisieren sondern nur die parameter umstellen (x y z lesen)
+man kann hier auch setatic methode schrieben oder die werte aktualisieren
+main speichert die daten von invoke werte
+
+
+Task startet und sendet mit timer, die voreingestellt is
+
+senden unendlich, max delay speichern um die frequenz besser zu berechnen,
+code optimierung
+
