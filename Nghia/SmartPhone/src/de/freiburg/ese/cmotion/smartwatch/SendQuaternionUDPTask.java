@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -106,7 +107,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	 */
 	public byte[] floatArray2ByteArray(float[] values) {
 		ByteBuffer buffer = ByteBuffer.allocate(4 * values.length);
-		
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		for (float value : values) {
 			buffer.putFloat(value);
 		}
