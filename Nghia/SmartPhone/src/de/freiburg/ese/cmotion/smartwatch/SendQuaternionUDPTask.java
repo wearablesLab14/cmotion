@@ -15,13 +15,19 @@ import android.util.Log;
 public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 	DatagramSocket s;
-
 	InetAddress address;
 	int destPort;
-	float[] lastReceiveData = new float[4];
 	int updateDelay;
 	long msLastUpdateTime;
+	float[] lastReceiveData = new float[4];
 
+	/**
+	 * 
+	 * @param frameCounter
+	 * @param uriString
+	 * @param port
+	 * @throws UnknownHostException
+	 */
 	public SendQuaternionUDPTask(int frameCounter, String uriString, int port)
 			throws UnknownHostException {
 		address = InetAddress.getByName(uriString);
@@ -38,9 +44,8 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 				if (getCurrentTimeInMs() - msLastUpdateTime >= updateDelay
 						&& getDataQQ()) {
 
-					// update;
 					msLastUpdateTime = getCurrentTimeInMs();
-					
+
 					byte[] cMotionPaket = convertToSendingPaket();
 					DatagramPacket p = new DatagramPacket(cMotionPaket,
 							cMotionPaket.length, address, destPort);
@@ -49,7 +54,6 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 					s.send(p);
 
 				} else {
-					// sleep
 					Thread.sleep(updateDelay);
 				}
 			}
@@ -63,15 +67,24 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 			Log.e("", "Failed to send UPD message.", e);
 			// e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e("", "Failed to send Thread to sleep.", e);
+			// e.printStackTrace();
 		}
 
 		return null;
 	}
 
-	/*
-	 * return true, if got new datas
+	/**
+	 * 
+	 * @return
+	 */
+	public static long getCurrentTimeInMs() {
+		return System.currentTimeMillis();
+	}
+
+	/**
+	 * 
+	 * @return true, if only got new data
 	 */
 	private boolean getDataQQ() {
 		float[] qq = MainActivity.getSensorData();
@@ -84,20 +97,16 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 				}
 			}
 		}
-		
-		// todo  return false
+
 		return false;
 	}
 
+	/**
+	 * float to byte
+	 * @return
+	 */
 	public byte[] convertToSendingPaket() {
-
-		// float to byte
 		return convertToCMotionHeader(floatArray2ByteArray(this.lastReceiveData));
-
-	}
-
-	public static long getCurrentTimeInMs() {
-		return System.currentTimeMillis();
 	}
 
 	/**
@@ -116,9 +125,8 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	}
 
 	/**
-	 * 4 bytes timestamp: only last 4 bytes of timestamp
-	 * 16 bytes quaternions: data from rotation sensor
-	 * 12 bytes correction data: currently empty
+	 * 4 bytes timestamp: only last 4 bytes of timestamp 16 bytes quaternions:
+	 * data from rotation sensor 12 bytes correction data: currently empty
 	 * 
 	 * @param msg
 	 * @return
@@ -127,9 +135,10 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 		byte[] result = new byte[32];
 
 		// copy timestamp
-		byte[] bytesTest = ByteBuffer.allocate(8).putLong(msLastUpdateTime).array();
+		byte[] bytesTest = ByteBuffer.allocate(8).putLong(msLastUpdateTime)
+				.array();
 		System.arraycopy(bytesTest, 4, result, 0, 4);
-		
+
 		// copy quaternions
 		int beginIndex = 4;
 		int copyIndex = 0;
