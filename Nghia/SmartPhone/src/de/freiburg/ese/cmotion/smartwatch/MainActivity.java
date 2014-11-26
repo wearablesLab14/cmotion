@@ -5,10 +5,10 @@ package de.freiburg.ese.cmotion.smartwatch;
 
 // import com.example.eyespeedtest.R;
 
-import java.io.IOException;
 import java.net.UnknownHostException;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -16,6 +16,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -25,6 +26,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 	private SensorManager sensorManager;
 	private boolean color = false;
+	private boolean isSending = true;
 	// private View view;
 	private long lastUpdate;
 	private float[] lastValues;
@@ -57,22 +59,19 @@ public class MainActivity extends Activity implements SensorEventListener {
 		lastUpdate = System.currentTimeMillis();
 
 		button = (Button) findViewById(R.id.button1);
+		button.setBackgroundColor(Color.RED);
+		button.setOnClickListener(btnSendUDPListener);
 		text = (TextView) findViewById(R.id.textView1);
-
-		try {
-			async = new SendQuaternionUDPTask(60, "192.168.0.255", 5050);
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		async.execute();
 		text.setTextSize(20);
+
+		createQuaternionUDPTask();
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+
 		return true;
 	}
 
@@ -95,6 +94,41 @@ public class MainActivity extends Activity implements SensorEventListener {
 			getRotationMeter(event);
 		}
 	}
+
+	/**
+	 * 
+	 */
+	protected void createQuaternionUDPTask() {
+		try {
+			async = new SendQuaternionUDPTask(60, "192.168.0.255", 5050);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		async.execute();
+	}
+
+	/**
+	 * 
+	 */
+	private View.OnClickListener btnSendUDPListener = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			if (isSending) {
+				if (async != null) {
+					async.cancel(true);
+				}
+				button.setBackgroundColor(Color.GREEN);
+				button.setText("send");
+				isSending = false;
+			} else {
+				button.setBackgroundColor(Color.RED);
+				button.setText("stop");
+				createQuaternionUDPTask();
+				isSending = true;
+			}
+		}
+	};
 
 	private void getRotationMeter(SensorEvent event) {
 		float[] rotation = event.values;
