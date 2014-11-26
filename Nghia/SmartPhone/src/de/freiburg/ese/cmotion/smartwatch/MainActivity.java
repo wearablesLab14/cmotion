@@ -14,6 +14,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,17 +25,11 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
+	private SendQuaternionUDPTask async;
+	private Button button;
+	private TextView text;
 	private SensorManager sensorManager;
-	private boolean color = false;
 	private boolean isSending = true;
-	// private View view;
-	private long lastUpdate;
-	private float[] lastValues;
-	SendQuaternionUDPTask async;
-	Button button;
-	TextView text;
-	private Object rotation;
-
 	private static float[] lastQQ = new float[4];
 
 	@Override
@@ -45,18 +40,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		setContentView(R.layout.activity_main);
-		// view = findViewById(R.id.textView1);
-		// view.setBackgroundColor(Color.GREEN);
 
-		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-		sensorManager.registerListener(this,
-				sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-				SensorManager.SENSOR_DELAY_FASTEST);
-		sensorManager.registerListener(this,
-				sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
-				SensorManager.SENSOR_DELAY_FASTEST);
-
-		lastUpdate = System.currentTimeMillis();
+		initSensorListeners();
 
 		button = (Button) findViewById(R.id.button1);
 		button.setBackgroundColor(Color.RED);
@@ -88,6 +73,12 @@ public class MainActivity extends Activity implements SensorEventListener {
 	}
 
 	@Override
+	protected void onResume() {
+		super.onResume();
+		initSensorListeners();
+	}
+
+	@Override
 	public void onSensorChanged(SensorEvent event) {
 		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 		} else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
@@ -95,15 +86,37 @@ public class MainActivity extends Activity implements SensorEventListener {
 		}
 	}
 
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		// TODO Auto-generated method stub
+
+	}
+
 	/**
 	 * 
+	 */
+	protected void initSensorListeners() {
+		if (sensorManager == null) {
+			sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+		}
+		sensorManager.registerListener(this,
+				sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+				SensorManager.SENSOR_DELAY_FASTEST);
+		sensorManager.registerListener(this,
+				sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
+				SensorManager.SENSOR_DELAY_FASTEST);
+	}
+
+	/**
+	 * Creates an asnyc task which periodically retrieves and transmits sensor
+	 * data
 	 */
 	protected void createQuaternionUDPTask() {
 		try {
 			async = new SendQuaternionUDPTask(60, "192.168.0.255", 5050);
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e("", "Given host is unknown.", e);
+			// e.printStackTrace();
 		}
 		async.execute();
 	}
@@ -130,12 +143,15 @@ public class MainActivity extends Activity implements SensorEventListener {
 		}
 	};
 
+	/**
+	 * Get rotation sensor data and transform them to quaternions
+	 * 
+	 * @param event
+	 */
 	private void getRotationMeter(SensorEvent event) {
 		float[] rotation = event.values;
-
-		float[] q = new float[4];
 		float[] rv = new float[] { rotation[0], rotation[1], rotation[2] };
-		sensorManager.getQuaternionFromVector(lastQQ, rv);
+		SensorManager.getQuaternionFromVector(lastQQ, rv);
 		this.text.setText(
 		// "Rotation X: " + (int)(rotationx*1000) + "\n" +
 		// "Rotation Y: " + ((int)(rotationy*1000) )+ "\n" +
@@ -147,28 +163,13 @@ public class MainActivity extends Activity implements SensorEventListener {
 						+ rotation[2]
 
 				);
-
 	}
 
-	@Override
-	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		// register this class as a listener for the orientation and
-		// accelerometer sensors
-		sensorManager.registerListener(this,
-				sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-				SensorManager.SENSOR_DELAY_FASTEST);
-		sensorManager.registerListener(this,
-				sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
-				SensorManager.SENSOR_DELAY_FASTEST);
-	}
-
+	/**
+	 * Static method for AsyncTask to periodically receive sensor data
+	 * 
+	 * @return
+	 */
 	public static float[] getSensorData() {
 		float[] copyArray = new float[lastQQ.length];
 		System.arraycopy(lastQQ, 0, copyArray, 0, lastQQ.length);
