@@ -47,7 +47,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 		button.setBackgroundColor(Color.RED);
 		button.setOnClickListener(btnSendUDPListener);
 		text = (TextView) findViewById(R.id.textView1);
-		text.setTextSize(20);
+		text.setTextSize(12);
 
 		createQuaternionUDPTask();
 	}
