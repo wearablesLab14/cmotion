@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Smartwatch</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="app_name">CMotion</string>
+    <string name="btn_sending">stop</string>
+    <string name="btn_multi">multi sensor</string>
     <string name="action_settings">Settings</string>
 
 </resources>

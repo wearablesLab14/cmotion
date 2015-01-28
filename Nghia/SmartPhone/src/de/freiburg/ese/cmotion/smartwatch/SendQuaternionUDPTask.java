@@ -12,6 +12,11 @@ import java.nio.ByteOrder;
 import android.os.AsyncTask;
 import android.util.Log;
 
+/**
+ * This class represents an asynchronous background task which sends
+ * periodically all connected sensor data (local and connected devices) via udp
+ * packets.
+ */
 public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 	DatagramSocket s;
@@ -46,21 +51,22 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 					msLastUpdateTime = getCurrentTimeInMs();
 
-					byte[] cMotionPaket = convertToSendingPaket(0);
-					DatagramPacket p = new DatagramPacket(cMotionPaket,
-							cMotionPaket.length, address, destPort);
+					byte[] cMotionPacket = convertToSendingPaket(0);
+					DatagramPacket p = new DatagramPacket(cMotionPacket,
+							cMotionPacket.length, address, destPort);
 
 					s = GlobalState.getSocket();
 					s.send(p);
-					
+					Log.d(MainActivity.TAG, java.util.Arrays.toString(cMotionPacket));
+
 					if (MainActivity.multiSensor) {
-						byte[] cMotionPaket2 = convertToSendingPaket(1);
-						DatagramPacket p2 = new DatagramPacket(cMotionPaket,
-								cMotionPaket.length, address, destPort);
+						byte[] cMotionPacket2 = convertToSendingPaket(1123);
+						DatagramPacket p2 = new DatagramPacket(cMotionPacket2,
+								cMotionPacket2.length, address, destPort);
 
 						s = GlobalState.getSocket();
-						s.send(p);
-						System.err.println("sended");
+						s.send(p2);
+						Log.d(MainActivity.TAG, java.util.Arrays.toString(cMotionPacket2));
 					}
 
 				} else {
@@ -68,17 +74,13 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 				}
 			}
 		} catch (SocketException e) {
-			Log.e("", "Unable to create socket.", e);
-			// e.printStackTrace();
+			Log.e(MainActivity.TAG, "Unable to create socket.", e);
 		} catch (UnknownHostException e) {
-			Log.e("", "Host " + address.getHostName() + " is unknown.", e);
-			// e.printStackTrace();
+			Log.e(MainActivity.TAG, "Host " + address.getHostName() + " is unknown.", e);
 		} catch (IOException e) {
-			Log.e("", "Failed to send UPD message.", e);
-			// e.printStackTrace();
+			Log.e(MainActivity.TAG, "Failed to send UPD message.", e);
 		} catch (InterruptedException e) {
-			Log.e("", "Failed to send Thread to sleep.", e);
-			// e.printStackTrace();
+			Log.e(MainActivity.TAG, "Failed to send Thread to sleep.", e);
 		}
 
 		return null;
@@ -113,10 +115,12 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 	/**
 	 * float to byte
+	 * 
 	 * @return
 	 */
-	public byte[] convertToSendingPaket(long deviceID) {
-		return convertToCMotionHeader(deviceID, floatArray2ByteArray(this.lastReceiveData));
+	public byte[] convertToSendingPaket(int deviceID) {
+		return convertToCMotionHeader(deviceID,
+				floatArray2ByteArray(this.lastReceiveData));
 	}
 
 	/**
@@ -143,17 +147,17 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	 * @param msg
 	 * @return
 	 */
-	protected byte[] convertToCMotionHeader(long deviceID, byte[] msg) {
+	protected byte[] convertToCMotionHeader(int deviceID, byte[] msg) {
 		byte[] result = new byte[32];
 
 		// copy timestamp
-		//byte[] bytesTest = ByteBuffer.allocate(8).putLong(msLastUpdateTime)
-		//		.array();
-		//System.arraycopy(bytesTest, 4, result, 0, 4);
-		
+		// byte[] bytesTest = ByteBuffer.allocate(8).putLong(msLastUpdateTime)
+		// .array();
+		// System.arraycopy(bytesTest, 4, result, 0, 4);
+
 		// Transmits the sender ID. Local device is always zero
-		byte[] bytesDeviceID = ByteBuffer.allocate(8).putLong(deviceID).array();
-		System.arraycopy(bytesDeviceID, 4, result, 0, 4);
+		byte[] bytesDeviceID = ByteBuffer.allocate(4).putInt(deviceID).array();
+		System.arraycopy(bytesDeviceID, 0, result, 0, 4);
 
 		// copy quaternions
 		int beginIndex = 4;
