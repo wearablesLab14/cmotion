@@ -27,9 +27,11 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 	private SendQuaternionUDPTask async;
 	private Button button;
+	private Button buttonTestMulti; // Testfunc for sending data twice for multiple frames
 	private TextView text;
 	private SensorManager sensorManager;
 	private boolean isSending = true;
+	protected static boolean multiSensor = false;
 	private static float[] lastQQ = new float[4];
 
 	@Override
@@ -42,6 +44,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 		setContentView(R.layout.activity_main);
 
 		initSensorListeners();
+		
 
 		button = (Button) findViewById(R.id.button1);
 		button.setBackgroundColor(Color.RED);
@@ -49,6 +52,14 @@ public class MainActivity extends Activity implements SensorEventListener {
 		text = (TextView) findViewById(R.id.textView1);
 		text.setTextSize(12);
 
+		
+		// TEMPORARY Test Button for multiple sensor data
+		buttonTestMulti = (Button) findViewById(R.id.button2);
+		buttonTestMulti.setBackgroundColor(Color.GREEN);
+		buttonTestMulti.setOnClickListener(btnMultiSensorListener);
+		//
+		
+		
 		createQuaternionUDPTask();
 	}
 
@@ -142,6 +153,28 @@ public class MainActivity extends Activity implements SensorEventListener {
 			}
 		}
 	};
+	
+	
+
+
+	/**
+	 * Temporary test function for sending multiple sensor data
+	 */
+	private View.OnClickListener btnMultiSensorListener = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			if (multiSensor) {
+				buttonTestMulti.setBackgroundColor(Color.GREEN);
+				buttonTestMulti.setText("multi sensor");
+				multiSensor = false;
+			} else {
+				buttonTestMulti.setBackgroundColor(Color.RED);
+				buttonTestMulti.setText("single sensor");
+				multiSensor = true;
+			}
+		}
+	};
+	
 
 	/**
 	 * Get rotation sensor data and transform them to quaternions

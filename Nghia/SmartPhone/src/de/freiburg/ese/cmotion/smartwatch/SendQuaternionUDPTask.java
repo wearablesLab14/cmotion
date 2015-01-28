@@ -46,12 +46,22 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 					msLastUpdateTime = getCurrentTimeInMs();
 
-					byte[] cMotionPaket = convertToSendingPaket();
+					byte[] cMotionPaket = convertToSendingPaket(0);
 					DatagramPacket p = new DatagramPacket(cMotionPaket,
 							cMotionPaket.length, address, destPort);
 
 					s = GlobalState.getSocket();
 					s.send(p);
+					
+					if (MainActivity.multiSensor) {
+						byte[] cMotionPaket2 = convertToSendingPaket(1);
+						DatagramPacket p2 = new DatagramPacket(cMotionPaket,
+								cMotionPaket.length, address, destPort);
+
+						s = GlobalState.getSocket();
+						s.send(p);
+						System.err.println("sended");
+					}
 
 				} else {
 					Thread.sleep(updateDelay);
@@ -105,8 +115,8 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	 * float to byte
 	 * @return
 	 */
-	public byte[] convertToSendingPaket() {
-		return convertToCMotionHeader(floatArray2ByteArray(this.lastReceiveData));
+	public byte[] convertToSendingPaket(long deviceID) {
+		return convertToCMotionHeader(deviceID, floatArray2ByteArray(this.lastReceiveData));
 	}
 
 	/**
@@ -128,16 +138,22 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	 * 4 bytes timestamp: only last 4 bytes of timestamp 16 bytes quaternions:
 	 * data from rotation sensor 12 bytes correction data: currently empty
 	 * 
+	 * UPDATE first 4 bytes determines the device ID
+	 * 
 	 * @param msg
 	 * @return
 	 */
-	protected byte[] convertToCMotionHeader(byte[] msg) {
+	protected byte[] convertToCMotionHeader(long deviceID, byte[] msg) {
 		byte[] result = new byte[32];
 
 		// copy timestamp
-		byte[] bytesTest = ByteBuffer.allocate(8).putLong(msLastUpdateTime)
-				.array();
-		System.arraycopy(bytesTest, 4, result, 0, 4);
+		//byte[] bytesTest = ByteBuffer.allocate(8).putLong(msLastUpdateTime)
+		//		.array();
+		//System.arraycopy(bytesTest, 4, result, 0, 4);
+		
+		// Transmits the sender ID. Local device is always zero
+		byte[] bytesDeviceID = ByteBuffer.allocate(8).putLong(deviceID).array();
+		System.arraycopy(bytesDeviceID, 4, result, 0, 4);
 
 		// copy quaternions
 		int beginIndex = 4;
