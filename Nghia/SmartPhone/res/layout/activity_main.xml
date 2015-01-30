@@ -18,6 +18,16 @@
         android:text=""
         android:textSize="12sp" />
 
+    <TextView
+        android:id="@+id/textView_Info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView_sensorData"
+        android:layout_below="@+id/textView_sensorData"
+        android:layout_marginTop="42dp"
+        android:text="Sensors: "
+        android:textSize="12sp" />
+
     <Button
         android:id="@+id/btn_sending"
         android:layout_width="wrap_content"

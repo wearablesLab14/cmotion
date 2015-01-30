@@ -1,8 +1,12 @@
 package de.freiburg.ese.cmotion.smartwatch;
 
-
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.UUID;
 
+import de.freiburg.ese.cmotion.smartwatch.SensorStack.SensorData;
 import android.app.Activity;
 import android.graphics.Color;
 import android.hardware.Sensor;
@@ -21,15 +25,19 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
-	public static final String TAG = "CMOTION";
-	private SendQuaternionUDPTask async;
+	protected static final String TAG = "CMOTION";
+	private static final String DEVICE_ID = UUID.randomUUID().toString();
+	private static final int UDP_PORT = 5050;
+	private static final String UDP_DEST = "192.168.178.255";
+	private static final int FRAME_RATE = 60;
+
 	private Button button;
-	private Button buttonTestMulti; // Testfunc for sending data twice for multiple frames
+	private Button buttonTestMulti; // Testfunc for sending multiple data
 	private TextView txtSensorData;
-	private SensorManager sensorManager;
 	private boolean isSending = true;
-	protected static boolean multiSensor = false;
-	private static float[] lastQQ = new float[4];
+	private SensorManager sensorManager;
+	private HashSet<SendQuaternionUDPTask> asyncStack = new HashSet<SendQuaternionUDPTask>();
+	private static SensorStack sensorStack = new SensorStack();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +62,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 		buttonTestMulti.setOnClickListener(btnMultiSensorListener);
 		//
 
-		createQuaternionUDPTask();
 	}
 
 	@Override
@@ -82,12 +89,21 @@ public class MainActivity extends Activity implements SensorEventListener {
 		super.onResume();
 
 		initSensorListeners();
+
+		if (sensorStack == null) {
+			sensorStack = new SensorStack();
+		}
+
+		sensorStack.registerSensor(DEVICE_ID); // local sensor
+		sensorStack.registerSensor("MULTI_TEST");
+		sensorStack.getSensorByID("MULTI_TEST").sleep();
+
+		createQuaternionUDPTasks();
 	}
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-		} else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+		if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
 			getRotationMeter(event);
 		}
 	}
@@ -116,13 +132,42 @@ public class MainActivity extends Activity implements SensorEventListener {
 	 * Creates an asnyc task which periodically retrieves and then transmits
 	 * sensor data via udp packets.
 	 */
-	protected void createQuaternionUDPTask() {
-		try {
-			async = new SendQuaternionUDPTask(60, "192.168.0.255", 5050);
-		} catch (UnknownHostException e) {
-			Log.e(TAG, "Given host is unknown!", e);
+	protected void createQuaternionUDPTasks() {
+		Log.d(TAG, "Creating async background tasks for " + sensorStack.size()
+				+ " registered sensors...");
+
+		for (Iterator<SensorData> iter = sensorStack.getSensorData(); iter
+				.hasNext();) {
+
+			try {
+				SensorData sensorData = iter.next();
+				SendQuaternionUDPTask async = new SendQuaternionUDPTask(
+						sensorData, FRAME_RATE, UDP_DEST, UDP_PORT);
+				asyncStack.add(async);
+
+				TaskHelper.execute(async);
+			} catch (UnknownHostException e) {
+				Log.e(TAG, "Given host is unknown!", e);
+			}
 		}
-		async.execute();
+	}
+
+	/**
+	 * Interrupts all current running async tasks.
+	 */
+	protected void cancelQuaternionUDPTasks() {
+		Log.d(TAG, "Canceling all " + asyncStack.size()
+				+ " async background tasks...");
+
+		for (Iterator<SendQuaternionUDPTask> iter = this.asyncStack.iterator(); iter
+				.hasNext();) {
+			SendQuaternionUDPTask async = iter.next();
+			Log.d(TAG, "Status async task: " + async.getStatus());
+			async.cancel(false);
+		}
+
+		// clear the set
+		asyncStack.clear();
 	}
 
 	/**
@@ -133,33 +178,36 @@ public class MainActivity extends Activity implements SensorEventListener {
 		@Override
 		public void onClick(View v) {
 			if (isSending) {
-				if (async != null) {
-					async.cancel(true);
-				}
+
+				cancelQuaternionUDPTasks();
+
 				button.setBackgroundColor(Color.GREEN);
 				button.setText("send");
 				isSending = false;
 			} else {
+
+				createQuaternionUDPTasks();
+
 				button.setBackgroundColor(Color.RED);
 				button.setText("stop");
-				createQuaternionUDPTask();
 				isSending = true;
 			}
 		}
 	};
 
 	/**
-	 * Temporary test function for sending multiple sensor data
+	 * TODO Temporary test function for sending multiple sensor data
 	 */
 	private View.OnClickListener btnMultiSensorListener = new View.OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			if (multiSensor) {
+			SensorData sensorData = sensorStack.getSensorByID("MULTI_TEST");
+			if (sensorData.isAlive()) {
 				buttonTestMulti.setBackgroundColor(Color.RED);
-				multiSensor = false;
+				sensorData.sleep();
 			} else {
 				buttonTestMulti.setBackgroundColor(Color.GREEN);
-				multiSensor = true;
+				sensorData.wakeUp();
 			}
 		}
 	};
@@ -172,29 +220,19 @@ public class MainActivity extends Activity implements SensorEventListener {
 	private void getRotationMeter(SensorEvent event) {
 		float[] rotation = event.values;
 		float[] rv = new float[] { rotation[0], rotation[1], rotation[2] };
-		SensorManager.getQuaternionFromVector(lastQQ, rv);
-		this.txtSensorData.setText(
-		// "Rotation X: " + (int)(rotationx*1000) + "\n" +
-		// "Rotation Y: " + ((int)(rotationy*1000) )+ "\n" +
-		// "Rotation Z: " + ((int)(rotationz*1000) )+ "\n" +
-		// "\n\n\n"++
-				lastQQ[0] + "\n" + lastQQ[1] + "\n" + lastQQ[2] + "\n"
-						+ lastQQ[3] + "\n" + "Rotation \n" + "X: "
-						+ rotation[0] + "\nY: " + rotation[1] + "\nZ: "
-						+ rotation[2]
+		float[] quaternions = new float[4];
 
-				);
-	}
+		SensorManager.getQuaternionFromVector(quaternions, rv);
+		sensorStack.updateSensor(DEVICE_ID, quaternions);
+		sensorStack.updateSensor("MULTI_TEST", quaternions);
 
-	/**
-	 * Static method for AsyncTask to periodically receive sensor data.
-	 * 
-	 * @return A float array containing quaternions
-	 */
-	public static float[] getSensorData() {
-		float[] copyArray = new float[lastQQ.length];
-		System.arraycopy(lastQQ, 0, copyArray, 0, lastQQ.length);
-		return copyArray;
+		this.txtSensorData.setText("Rotation X: " + (int) (rotation[0] * 1000)
+				+ "\n" + "Rotation Y: " + ((int) (rotation[1] * 1000)) + "\n"
+				+ "Rotation Z: " + ((int) (rotation[2] * 1000)) + "\n"
+				+ "\n\n\n" + quaternions[0] + "\n" + quaternions[1] + "\n"
+				+ quaternions[2] + "\n" + quaternions[3] + "\n" + "Rotation \n"
+				+ "X: " + rotation[0] + "\nY: " + rotation[1] + "\nZ: "
+				+ rotation[2]);
 	}
 
 }

@@ -14,6 +14,7 @@ public class GlobalState extends Application {
 	 * Creates a new datagram socket if not already created or closed and returns it.
 	 * @return A datagram socket
 	 * @throws SocketException
+	 * @deprecated
 	 */
 	public static DatagramSocket getSocket() throws SocketException {
 		if (socket == null || socket.isClosed()) {

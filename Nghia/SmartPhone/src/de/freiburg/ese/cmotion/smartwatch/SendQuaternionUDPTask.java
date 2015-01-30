@@ -8,66 +8,90 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import android.os.AsyncTask;
 import android.util.Log;
+import de.freiburg.ese.cmotion.smartwatch.SensorStack.SensorData;
 
 /**
  * This class represents an asynchronous background task which sends
- * periodically all connected sensor data (local and connected devices) via udp
+ * periodically all connected sensor data (local and connected devices) via UDP
  * packets.
  */
 public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
-	DatagramSocket s;
-	InetAddress address;
-	int destPort;
-	int updateDelay;
-	long msLastUpdateTime;
-	float[] lastReceiveData = new float[4];
+	private DatagramSocket s;
+	private InetAddress address;
+	private int destPort;
+	private int updateDelay;
+	private long msLastUpdateTime;
+	private SensorData sensorData;
+
+	private LinkedList<Long> times = new LinkedList<Long>();
+	private final int MAX_SIZE = 100;
+	private final double NANOS = 1000000000.0;
 
 	/**
 	 * 
+	 * @param sensorData
 	 * @param frameCounter
 	 * @param uriString
 	 * @param port
 	 * @throws UnknownHostException
 	 */
-	public SendQuaternionUDPTask(int frameCounter, String uriString, int port)
-			throws UnknownHostException {
+	public SendQuaternionUDPTask(SensorData sensorData, int frameCounter,
+			String uriString, int port) throws UnknownHostException {
+		this.sensorData = sensorData;
 		address = InetAddress.getByName(uriString);
 		destPort = port;
 		updateDelay = 1000 / frameCounter;
 		msLastUpdateTime = getCurrentTimeInMs();
+		times.add(System.nanoTime());
+	}
 
+	private double fps() {
+		long lastTime = System.nanoTime();
+		double difference = (lastTime - times.getFirst()) / NANOS;
+		times.addLast(lastTime);
+		int size = times.size();
+		if (size > MAX_SIZE) {
+			times.removeFirst();
+		}
+		return difference > 0 ? times.size() / difference : 0.0;
 	}
 
 	@Override
 	protected Object doInBackground(Object... params) {
 		try {
-			while (true) {
-				if (getCurrentTimeInMs() - msLastUpdateTime >= updateDelay
-						&& getDataQQ()) {
 
+			while (true) {
+
+				// Escape early if cancel() is called
+				if (isCancelled()) {
+					break;
+				}
+
+				if (getCurrentTimeInMs() - msLastUpdateTime >= updateDelay) {
 					msLastUpdateTime = getCurrentTimeInMs();
 
-					byte[] cMotionPacket = convertToSendingPaket(0);
+					Log.d("FPS", fps() + " fps");
+
+					if (!sensorData.isAlive()) {
+						Log.d(MainActivity.TAG, "Sensor '" + sensorData
+								+ "' is sleeping...");
+						continue;
+					}
+
+					byte[] cMotionPacket = convertToSendingPacket(sensorData);
 					DatagramPacket p = new DatagramPacket(cMotionPacket,
 							cMotionPacket.length, address, destPort);
 
-					s = GlobalState.getSocket();
+					s = getSocket();
 					s.send(p);
-					Log.d(MainActivity.TAG, java.util.Arrays.toString(cMotionPacket));
-
-					if (MainActivity.multiSensor) {
-						byte[] cMotionPacket2 = convertToSendingPaket(1123);
-						DatagramPacket p2 = new DatagramPacket(cMotionPacket2,
-								cMotionPacket2.length, address, destPort);
-
-						s = GlobalState.getSocket();
-						s.send(p2);
-						Log.d(MainActivity.TAG, java.util.Arrays.toString(cMotionPacket2));
-					}
+					Log.d(MainActivity.TAG,
+							java.util.Arrays.toString(cMotionPacket));
 
 				} else {
 					Thread.sleep(updateDelay);
@@ -76,7 +100,8 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 		} catch (SocketException e) {
 			Log.e(MainActivity.TAG, "Unable to create socket.", e);
 		} catch (UnknownHostException e) {
-			Log.e(MainActivity.TAG, "Host " + address.getHostName() + " is unknown.", e);
+			Log.e(MainActivity.TAG, "Host " + address.getHostName()
+					+ " is unknown.", e);
 		} catch (IOException e) {
 			Log.e(MainActivity.TAG, "Failed to send UPD message.", e);
 		} catch (InterruptedException e) {
@@ -84,6 +109,14 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 		}
 
 		return null;
+	}
+	
+	public DatagramSocket getSocket() throws SocketException {
+		if (s == null || s.isClosed()) {
+			s = new DatagramSocket();
+			Log.d(MainActivity.TAG, "socket was null and will be created");
+		}
+		return s;
 	}
 
 	/**
@@ -96,34 +129,16 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 	/**
 	 * 
-	 * @return true, if only got new data
-	 */
-	private boolean getDataQQ() {
-		float[] qq = MainActivity.getSensorData();
-		if (qq != null && this.lastReceiveData != null
-				&& qq.length == this.lastReceiveData.length) {
-			for (int i = 0; i < qq.length; i++) {
-				if (qq[i] != this.lastReceiveData[i]) {
-					lastReceiveData = qq;
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * float to byte
-	 * 
+	 * @param sensorData
 	 * @return
 	 */
-	public byte[] convertToSendingPaket(int deviceID) {
-		return convertToCMotionHeader(deviceID,
-				floatArray2ByteArray(this.lastReceiveData));
+	public byte[] convertToSendingPacket(SensorData sensorData) {
+		return convertToCMotionHeader(sensorData.getSensorNo(),
+				floatArray2ByteArray(sensorData.getQuaternions()));
 	}
 
 	/**
+	 * Transforms the a float array to a byte array using required byte order.
 	 * 
 	 * @param values
 	 * @return
@@ -139,25 +154,24 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 	}
 
 	/**
-	 * 4 bytes timestamp: only last 4 bytes of timestamp 16 bytes quaternions:
-	 * data from rotation sensor 12 bytes correction data: currently empty
+	 * A udp packets consists of a 32 bytes array. In human_cognition project
+	 * for ROS the 4 bytes are intended for sending a timestamp. But in the
+	 * current version it is not used. For supporting multiple sensor data from
+	 * a single IP the first 4 bytes are used to transmit a device number.
+	 * Therefore, the combination of IP and device no is unique. The next 16
+	 * bytes contains the quaternion float data array. The last 12 bytes is
+	 * resevered for correction data which will be currently empty
 	 * 
-	 * UPDATE first 4 bytes determines the device ID
-	 * 
+	 * @param deviceNo
 	 * @param msg
 	 * @return
 	 */
-	protected byte[] convertToCMotionHeader(int deviceID, byte[] msg) {
+	protected byte[] convertToCMotionHeader(int deviceNo, byte[] msg) {
 		byte[] result = new byte[32];
 
-		// copy timestamp
-		// byte[] bytesTest = ByteBuffer.allocate(8).putLong(msLastUpdateTime)
-		// .array();
-		// System.arraycopy(bytesTest, 4, result, 0, 4);
-
-		// Transmits the sender ID. Local device is always zero
-		byte[] bytesDeviceID = ByteBuffer.allocate(4).putInt(deviceID).array();
-		System.arraycopy(bytesDeviceID, 0, result, 0, 4);
+		// Transmits the device number. Local device is always zero
+		byte[] bytesDeviceNo = ByteBuffer.allocate(4).putInt(deviceNo).array();
+		System.arraycopy(bytesDeviceNo, 0, result, 0, 4);
 
 		// copy quaternions
 		int beginIndex = 4;
