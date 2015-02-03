@@ -28,7 +28,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 	protected static final String TAG = "CMOTION";
 	private static final String DEVICE_ID = UUID.randomUUID().toString();
 	private static final int UDP_PORT = 5050;
-	private static final String UDP_DEST = "192.168.178.255";
+	private static final String UDP_DEST = "192.168.0.255";
 	private static final int FRAME_RATE = 60;
 
 	private Button button;
