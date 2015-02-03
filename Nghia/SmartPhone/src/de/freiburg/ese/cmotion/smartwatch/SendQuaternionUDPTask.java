@@ -8,7 +8,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import android.os.AsyncTask;
@@ -170,7 +169,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 		byte[] result = new byte[32];
 
 		// Transmits the device number. Local device is always zero
-		byte[] bytesDeviceNo = ByteBuffer.allocate(4).putInt(deviceNo).array();
+		byte[] bytesDeviceNo = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(deviceNo).array();
 		System.arraycopy(bytesDeviceNo, 0, result, 0, 4);
 
 		// copy quaternions
