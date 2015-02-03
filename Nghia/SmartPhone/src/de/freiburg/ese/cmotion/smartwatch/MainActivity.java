@@ -34,6 +34,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 	private Button button;
 	private Button buttonTestMulti; // Testfunc for sending multiple data
 	private TextView txtSensorData;
+	private TextView txtSensorInfo;
 	private boolean isSending = true;
 	private SensorManager sensorManager;
 	private HashSet<SendQuaternionUDPTask> asyncStack = new HashSet<SendQuaternionUDPTask>();
@@ -55,6 +56,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 		button.setOnClickListener(btnSendUDPListener);
 		txtSensorData = (TextView) findViewById(R.id.textView_sensorData);
 		txtSensorData.setTextSize(12);
+		txtSensorInfo = (TextView) findViewById(R.id.textView_info);
+		txtSensorInfo.setTextSize(12);
 
 		// TEMPORARY Test Button for multiple sensor data
 		buttonTestMulti = (Button) findViewById(R.id.button2);
@@ -99,6 +102,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 		sensorStack.getSensorByID("MULTI_TEST").sleep();
 
 		createQuaternionUDPTasks();
+		updateUI();
 	}
 
 	@Override
@@ -152,6 +156,27 @@ public class MainActivity extends Activity implements SensorEventListener {
 		}
 	}
 
+	
+	/**
+	 * Manages common UI updates.
+	 */
+	private void updateUI() {
+
+		String sensorInfo = "";
+		int activeSensors = 0;
+		int registeredSensors = sensorStack.size();
+		for (Iterator<SensorData> iter = sensorStack.getSensorData(); iter
+				.hasNext();) {
+			if (iter.next().isAlive()) {
+				activeSensors++;
+			}
+		}
+		sensorInfo = "Registered sensors: " + registeredSensors;
+		sensorInfo += "\nActive sensors: " + Math.max(0, (asyncStack.size() - (registeredSensors - activeSensors)));
+		txtSensorInfo.setText(sensorInfo);
+
+	}
+
 	/**
 	 * Interrupts all current running async tasks.
 	 */
@@ -192,6 +217,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 				button.setText("stop");
 				isSending = true;
 			}
+			
+			updateUI();
 		}
 	};
 
@@ -209,6 +236,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 				buttonTestMulti.setBackgroundColor(Color.GREEN);
 				sensorData.wakeUp();
 			}
+
+			updateUI();
 		}
 	};
 
