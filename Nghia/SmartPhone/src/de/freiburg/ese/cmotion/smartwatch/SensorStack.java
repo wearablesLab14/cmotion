@@ -34,13 +34,13 @@ public class SensorStack {
 	 * @param deviceID
 	 */
 	public void registerSensor(String deviceID) {
-		Log.d("PONY", "sensor registered " + deviceID);
-		
-		if(sensorDataMap.containsKey(deviceID)) {
-			Log.d("PONY", "sensor already registered");
-				return;
+		Log.d(MainActivity.TAG, "Sensor registered " + deviceID);
+
+		if (sensorDataMap.containsKey(deviceID)) {
+			Log.d(MainActivity.TAG, "Sensor already registered");
+			return;
 		}
-		
+
 		sensorDataMap.put(deviceID, new SensorData(deviceID, counter,
 				new float[4]));
 		counter++;
@@ -89,7 +89,7 @@ public class SensorStack {
 		throw new UnknownSensorDeviceException(
 				"No sensor registered for device " + deviceID);
 	}
-	
+
 	/**
 	 * 
 	 * @return
@@ -120,7 +120,7 @@ public class SensorStack {
 			this.sensorNo = sensorNo;
 			this.quaternions = quaternions;
 		}
-		
+
 		@Override
 		public String toString() {
 			return "SensorData [deviceID=" + deviceID + ", sensorNo="

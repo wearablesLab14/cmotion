@@ -75,7 +75,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 				if (getCurrentTimeInMs() - msLastUpdateTime >= updateDelay) {
 					msLastUpdateTime = getCurrentTimeInMs();
 
-					Log.d("FPS", fps() + " fps");
+					Log.v("FPS", fps() + " fps");
 
 					if (!sensorData.isAlive()) {
 						Log.d(MainActivity.TAG, "Sensor '" + sensorData
@@ -89,7 +89,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
 					s = getSocket();
 					s.send(p);
-					Log.d(MainActivity.TAG,
+					Log.v(MainActivity.TAG,
 							java.util.Arrays.toString(cMotionPacket));
 
 				} else {
