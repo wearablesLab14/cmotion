@@ -1,18 +1,19 @@
 package de.freiburg.ese.cmotion.smartwatch;
 
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.UUID;
 
-import de.freiburg.ese.cmotion.smartwatch.SensorStack.SensorData;
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -22,6 +23,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
+import de.freiburg.ese.cmotion.smartwatch.SensorStack.SensorData;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
@@ -43,6 +45,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -88,6 +91,11 @@ public class MainActivity extends Activity implements SensorEventListener {
 	}
 
 	@Override
+	protected void onStart() {
+		super.onStart();
+	}
+
+	@Override
 	protected void onResume() {
 		super.onResume();
 
@@ -103,6 +111,29 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 		createQuaternionUDPTasks();
 		updateUI();
+
+		// show client info
+		TextView clientInfoView = (TextView) findViewById(R.id.textView_clientInfo);
+		getWifiIpAddress();
+
+		clientInfoView.setText("Client info:\nIP-Address: "
+				+ getWifiIpAddress());
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		cancelQuaternionUDPTasks();
 	}
 
 	@Override
@@ -114,7 +145,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-		// TODO Auto-generated method stub
+		// currently nothing to do...
 	}
 
 	/**
@@ -137,6 +168,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 	 * sensor data via udp packets.
 	 */
 	protected void createQuaternionUDPTasks() {
+		cancelQuaternionUDPTasks(); // stop all current async tasks
+
 		Log.d(TAG, "Creating async background tasks for " + sensorStack.size()
 				+ " registered sensors...");
 
@@ -156,7 +189,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 		}
 	}
 
-	
 	/**
 	 * Manages common UI updates.
 	 */
@@ -172,7 +204,10 @@ public class MainActivity extends Activity implements SensorEventListener {
 			}
 		}
 		sensorInfo = "Registered sensors: " + registeredSensors;
-		sensorInfo += "\nActive sensors: " + Math.max(0, (asyncStack.size() - (registeredSensors - activeSensors)));
+		sensorInfo += "\nActive sensors: "
+				+ Math.max(
+						0,
+						(asyncStack.size() - (registeredSensors - activeSensors)));
 		txtSensorInfo.setText(sensorInfo);
 
 	}
@@ -217,7 +252,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 				button.setText("stop");
 				isSending = true;
 			}
-			
+
 			updateUI();
 		}
 	};
@@ -264,4 +299,18 @@ public class MainActivity extends Activity implements SensorEventListener {
 				+ rotation[2]);
 	}
 
+	/**
+	 * Reads out the device ip address if its connected to a wireless network.
+	 * Needs the ACCESS_WIFI_STATE permission.
+	 * 
+	 * @return
+	 */
+	protected String getWifiIpAddress() {
+		WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+		int ip = wifiInfo.getIpAddress();
+
+		return String.format("%d.%d.%d.%d", (ip & 0xff), (ip >> 8 & 0xff),
+				(ip >> 16 & 0xff), (ip >> 24 & 0xff));
+	}
 }

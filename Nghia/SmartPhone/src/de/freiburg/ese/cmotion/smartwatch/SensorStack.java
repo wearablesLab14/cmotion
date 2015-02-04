@@ -3,6 +3,8 @@ package de.freiburg.ese.cmotion.smartwatch;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import android.util.Log;
+
 /**
  * This class holds all registered rotation sensor data represented as
  * quaternions. Every registered sensor has to be unique by a given deviceID as
@@ -32,6 +34,13 @@ public class SensorStack {
 	 * @param deviceID
 	 */
 	public void registerSensor(String deviceID) {
+		Log.d("PONY", "sensor registered " + deviceID);
+		
+		if(sensorDataMap.containsKey(deviceID)) {
+			Log.d("PONY", "sensor already registered");
+				return;
+		}
+		
 		sensorDataMap.put(deviceID, new SensorData(deviceID, counter,
 				new float[4]));
 		counter++;
