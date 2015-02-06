@@ -4,6 +4,6 @@
     <string name="app_name">CMotion NEW</string>
 
     <string name="btn_sending">stop</string>
-    <string name="btn_multi">multi sensor</string>
+    <string name="btn_duplicate">duplicate sensor</string>
     <string name="action_settings">Settings</string>
 </resources>

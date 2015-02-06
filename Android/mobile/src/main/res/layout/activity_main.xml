@@ -37,12 +37,12 @@
         android:layout_marginBottom="45dp"></ListView>
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/btn_duplicate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/listView1"
         android:layout_below="@+id/listView1"
-        android:text="@string/btn_multi"
+        android:text="@string/btn_duplicate"
         android:textSize="12sp" />
 
     <Button

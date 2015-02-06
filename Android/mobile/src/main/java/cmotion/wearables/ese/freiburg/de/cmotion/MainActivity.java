@@ -62,7 +62,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private TextView mTextView;
 
     private Button button;
-    private Button buttonTestMulti; // Testfunc for sending multiple data
+    private Button buttonDuplicate; // Testfunc for sending duplicate data
     private TextView txtSensorData;
     private TextView txtSensorInfo;
     private boolean isSending = true;
@@ -88,16 +88,15 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         button = (Button) findViewById(R.id.btn_sending);
         button.setBackgroundColor(Color.RED);
         button.setOnClickListener(btnSendUDPListener);
+
+        buttonDuplicate = (Button) findViewById(R.id.btn_duplicate);
+        buttonDuplicate.setBackgroundColor(Color.RED);
+        buttonDuplicate.setOnClickListener(btnDuplicateSensorListener);
+
         txtSensorData = (TextView) findViewById(R.id.textView_sensorData);
         txtSensorData.setTextSize(12);
         txtSensorInfo = (TextView) findViewById(R.id.textView_info);
         txtSensorInfo.setTextSize(12);
-
-        // TEMPORARY Test Button for multiple sensor data
-        buttonTestMulti = (Button) findViewById(R.id.button2);
-        buttonTestMulti.setBackgroundColor(Color.RED);
-        buttonTestMulti.setOnClickListener(btnMultiSensorListener);
-        //
 
     }
 
@@ -110,8 +109,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         }
 
         sensorStack.registerSensor(DEVICE_ID); // local sensor
-        sensorStack.registerSensor("MULTI_TEST");
-        sensorStack.getSensorByID("MULTI_TEST").sleep();
+        sensorStack.registerSensor("DUPLICATE_SENSOR");
+        sensorStack.getSensorByID("DUPLICATE_SENSOR").sleep();
 
         initSensorListeners();
         initGoogleApiClient();
@@ -342,17 +341,18 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     };
 
     /**
-     * TODO Temporary test function for sending multiple sensor data
+     * Activating the function will duplicate the local sensor data and register it in the sensor
+     * stack. Resulting in transmitting the same sensor data twice for parallel or testing purposes.
      */
-    private View.OnClickListener btnMultiSensorListener = new View.OnClickListener() {
+    private View.OnClickListener btnDuplicateSensorListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            SensorData sensorData = sensorStack.getSensorByID("MULTI_TEST");
+            SensorData sensorData = sensorStack.getSensorByID("DUPLICATE_SENSOR");
             if (sensorData.isAlive()) {
-                buttonTestMulti.setBackgroundColor(Color.RED);
+                buttonDuplicate.setBackgroundColor(Color.RED);
                 sensorData.sleep();
             } else {
-                buttonTestMulti.setBackgroundColor(Color.GREEN);
+                buttonDuplicate.setBackgroundColor(Color.GREEN);
                 sensorData.wakeUp();
             }
 
@@ -372,7 +372,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         SensorManager.getQuaternionFromVector(quaternions, rv);
         sensorStack.updateSensor(DEVICE_ID, quaternions);
-        sensorStack.updateSensor("MULTI_TEST", quaternions);
+        sensorStack.updateSensor("DUPLICATE_SENSOR", quaternions);
 
         this.txtSensorData.setText("Rotation X: " + (int) (rotation[0] * 1000)
                 + "\n" + "Rotation Y: " + ((int) (rotation[1] * 1000)) + "\n"
@@ -419,7 +419,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        Log.v(TAG, "onMessageReceived called");
+        Log.v(TAG, "onMessageReceived() called");
         Log.v(TAG, messageEvent.toString());
         byte[] data = messageEvent.getData();
         float[] quaternions = new float[4];
