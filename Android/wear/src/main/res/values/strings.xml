@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">CMotion Wear</string>
+    <string name="hello_round">Hello Round Droid!</string>
+    <string name="hello_square">Hello Square Droid!</string>
+    <string name="long_press_intro">exit?</string>
+</resources>
