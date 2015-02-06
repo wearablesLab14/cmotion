@@ -29,6 +29,14 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * MainActivity for the wearable app of cmotion project. The app will transmit its local device sensor data
+ * via message api to its paired mobile device. The data will be transmitted through bluetooth le.
+ *
+ * @author Sebastian Jäger<jaegerse@informatik.uni-freiburg.de>
+ * @date 05.02.2015
+ * @version 0.0.1
+ */
 public class MainActivity extends Activity implements SensorEventListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, View.OnLongClickListener {
 
     private static final long CONNECTION_TIME_OUT_MS = 100;

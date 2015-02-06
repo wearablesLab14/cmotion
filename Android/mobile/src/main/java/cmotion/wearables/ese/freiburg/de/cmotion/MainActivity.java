@@ -37,7 +37,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.UUID;
 
-
+/**
+ * MainActivity for the mobile app of cmotion project. The app will transmit its local device sensor data as well as
+ * connected wearables sensor data via udp packets to the cmotion server which will listen to the broadcast
+ * network address. Every sensor - local and connected ones - will be registered in the sensor stack and for each
+ * registered sensor an async task will be started in the background which will handle the udp packeting and
+ * transmitting. Paired wearable devices will send via the message api which this app is listening to.
+ *
+ * @author Sebastian Jäger<jaegerse@informatik.uni-freiburg.de>
+ * @date 05.02.2015
+ * @version 0.0.1
+ * @see cmotion.wearables.ese.freiburg.de.cmotion.SensorStack
+ * @see cmotion.wearables.ese.freiburg.de.cmotion.SendQuaternionUDPTask
+ */
 public class MainActivity extends ActionBarActivity implements SensorEventListener, MessageApi.MessageListener, DataApi.DataListener, GoogleApiClient.ConnectionCallbacks {
 
     public final static String TAG = "CMOTION";
