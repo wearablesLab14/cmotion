@@ -75,7 +75,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
 
             // Skip sending if sensor was set to sleep
             if (!sensorData.isAlive()) {
-                Log.v(MainActivity.TAG, "Sensor '" + sensorData + "' is sleeping...");
+                //Log.v(MainActivity.TAG, "Sensor '" + sensorData + "' is sleeping...");
                 continue;
             }
 

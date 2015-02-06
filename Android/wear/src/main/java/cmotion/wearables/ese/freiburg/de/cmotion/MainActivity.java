@@ -34,14 +34,15 @@ import java.util.concurrent.TimeUnit;
  * via message api to its paired mobile device. The data will be transmitted through bluetooth le.
  *
  * @author Sebastian Jäger<jaegerse@informatik.uni-freiburg.de>
- * @date 05.02.2015
  * @version 0.0.1
+ * @date 05.02.2015
  */
-public class MainActivity extends Activity implements SensorEventListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, View.OnLongClickListener {
+public class MainActivity extends Activity implements SensorEventListener, View.OnLongClickListener {
 
     private static final long CONNECTION_TIME_OUT_MS = 100;
     public static final String TAG = "CMOTION";
     private TextView mTextView;
+    private TextView mTextViewFps;
     private SensorManager sensorManager;
     private static float[] lastQQ = new float[4];
     protected GoogleApiClient mGoogleApiClient;
@@ -49,8 +50,7 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
     private GestureDetector mDetector;
     private String nodeId;
     private long lastTime = System.currentTimeMillis();
-    private int FRAMES = 70; // messages per second send to mobile
-
+    private int FRAMES = 50; // messages per second send to mobile
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,16 +64,9 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
             @Override
             public void onLayoutInflated(WatchViewStub stub) {
                 mTextView = (TextView) stub.findViewById(R.id.text);
+                mTextViewFps = (TextView) stub.findViewById(R.id.text_fps);
             }
         });
-
-/*
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Wearable.API)
-                .build();
-*/
 
         // Obtain the DismissOverlayView element
         mDismissOverlay = (DismissOverlayView) findViewById(R.id.dismiss_overlay);
@@ -114,7 +107,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         Log.d(TAG, "onDestroy() called");
 
         if (mGoogleApiClient != null) {
-            mGoogleApiClient.unregisterConnectionCallbacks(this);
+            //mGoogleApiClient.unregisterConnectionCallbacks(this);
+            mGoogleApiClient.disconnect();
         }
 
         if (sensorManager != null) {
@@ -147,6 +141,8 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
      */
     private GoogleApiClient getGoogleApiClient(Context context) {
         return new GoogleApiClient.Builder(context)
+        //        .addConnectionCallbacks(this)
+        //        .addOnConnectionFailedListener(this)
                 .addApi(Wearable.API)
                 .build();
     }
@@ -177,7 +173,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
 
     /**
      * Sends a message to the connected mobile phone. The payload contains the quaternions as float array.
-     *
      */
     private void sendQuaternionsToMobilePhone() {
         if (nodeId != null) {
@@ -263,20 +258,6 @@ public class MainActivity extends Activity implements SensorEventListener, Googl
         }
 
         return buffer.array();
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
     }
 
     @Override

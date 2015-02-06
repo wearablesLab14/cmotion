@@ -46,8 +46,8 @@ import java.util.UUID;
  * transmitting. Paired wearable devices will send via the message api which this app is listening to.
  *
  * @author Sebastian Jäger<jaegerse@informatik.uni-freiburg.de>
- * @date 05.02.2015
  * @version 0.0.1
+ * @date 05.02.2015
  * @see cmotion.wearables.ese.freiburg.de.cmotion.SensorStack
  * @see cmotion.wearables.ese.freiburg.de.cmotion.SendQuaternionUDPTask
  */
@@ -59,7 +59,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private static final String UDP_DEST = "192.168.0.255";
     private static final int FRAME_RATE = 60;
     private GoogleApiClient mApiClient;
-    private MessageApi.MessageListener messageListener;
     private TextView mTextView;
 
     private Button button;
@@ -84,6 +83,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
         initSensorListeners();
+        initGoogleApiClient();
 
         button = (Button) findViewById(R.id.btn_sending);
         button.setBackgroundColor(Color.RED);
@@ -99,33 +99,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         buttonTestMulti.setOnClickListener(btnMultiSensorListener);
         //
 
-
-        initGoogleApiClient();
-/*
-        messageListener = new MessageApi.MessageListener() {
-            @Override
-            public void onMessageReceived(MessageEvent messageEvent) {
-                Log.d(TAG, messageEvent.toString());
-            }
-        };
-        Wearable.MessageApi.addListener(mApiClient, messageListener);
-*/
-        Wearable.MessageApi.addListener(mApiClient, this);
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        //    Wearable.MessageApi.addListener(mApiClient, this);
-        //   Wearable.MessageApi.addListener(mApiClient, messageListener);
-        Log.d(TAG, "API Client is connected " + mApiClient.isConnected());
-        Log.d(TAG, "API Client is connecting " + mApiClient.isConnecting());
-        Log.d(TAG, "API Client " + mApiClient);
-
-
-        initSensorListeners();
 
         if (sensorStack == null) {
             sensorStack = new SensorStack();
@@ -135,21 +113,20 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         sensorStack.registerSensor("MULTI_TEST");
         sensorStack.getSensorByID("MULTI_TEST").sleep();
 
+        initSensorListeners();
+        initGoogleApiClient();
+
         createQuaternionUDPTasks();
         updateUI();
 
         // show client info
         TextView clientInfoView = (TextView) findViewById(R.id.textView_clientInfo);
-        getWifiIpAddress();
-
-        clientInfoView.setText("Client info:\nIP-Address: "
-                + getWifiIpAddress());
+        clientInfoView.setText("Client info:\nIP-Address: " + getWifiIpAddress());
     }
 
     @Override
     protected void onStop() {
         if (mApiClient != null) {
-            Wearable.MessageApi.removeListener(mApiClient, this);
         }
 
         super.onStop();
@@ -159,6 +136,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected void onDestroy() {
         if (mApiClient != null) {
             mApiClient.unregisterConnectionCallbacks(this);
+            mApiClient.unregisterConnectionFailedListener(this);
+            Wearable.MessageApi.removeListener(mApiClient, this);
+        }
+
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
         }
 
         cancelQuaternionUDPTasks();
@@ -202,22 +185,29 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     @Override
     public void onConnected(Bundle bundle) {
-
         sendMessage("START_ACTIVITY", "test");
         Log.d(TAG, "onConnected() called");
         TextView textView = (TextView) this.findViewById(R.id.textView_wear);
-        textView.setText("Wearable device connected!");
+        textView.setText("Wearable device connected");
+        updateUI();
     }
+
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
         Log.d(TAG, "onConnectionFailed() called");
+        TextView textView = (TextView) this.findViewById(R.id.textView_wear);
+        textView.setText("Connection to wearable device failed!");
+        updateUI();
     }
 
     @Override
     public void onConnectionSuspended(int i) {
 
         Log.d(TAG, "onConnectionSuspended() called");
+        TextView textView = (TextView) this.findViewById(R.id.textView_wear);
+        textView.setText("No wearable device connected!");
+        updateUI();
     }
 
     /**
@@ -228,9 +218,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         }
         sensorManager.registerListener(this,
-                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(this,
                 sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                 SensorManager.SENSOR_DELAY_FASTEST);
     }
@@ -239,16 +226,26 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
      *
      */
     private void initGoogleApiClient() {
-        mApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Wearable.API)
-                .build();
+        if (mApiClient == null) {
+            Log.d(TAG, "Init GoogleApiClient");
+            mApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(Wearable.API)
+                    .build();
 
-        mApiClient.connect();
+            mApiClient.connect();
+        } else if (!mApiClient.isConnected()) {
+            Log.d(TAG, "Reconnect GoogleApiClient");
+            mApiClient.reconnect();
+        }
+
+        // Has to be added every time after connect() or reconnect() was called
+        Wearable.MessageApi.addListener(mApiClient, this);
+
+        Log.d(TAG, "API Client is " + mApiClient);
+        Log.d(TAG, "API Client is connecting " + mApiClient.isConnecting());
         Log.d(TAG, "API Client is connected " + mApiClient.isConnected());
-        Log.d(TAG, "API Client is connected " + mApiClient.isConnecting());
-        Log.d(TAG, "API Client is connected " + mApiClient);
     }
 
 
@@ -286,18 +283,16 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         String sensorInfo = "";
         int activeSensors = 0;
         int registeredSensors = sensorStack.size();
-        for (Iterator<SensorData> iter = sensorStack.getSensorData(); iter
-                .hasNext(); ) {
+        for (Iterator<SensorData> iter = sensorStack.getSensorData(); iter.hasNext(); ) {
             if (iter.next().isAlive()) {
                 activeSensors++;
             }
         }
         sensorInfo = "Registered sensors: " + registeredSensors;
-        sensorInfo += "\nActive sensors: "
-                + Math.max(
-                0,
+        sensorInfo += "\nActive sensors: " + Math.max(0,
                 (asyncStack.size() - (registeredSensors - activeSensors)));
         txtSensorInfo.setText(sensorInfo);
+
 
     }
 
@@ -386,6 +381,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 + quaternions[2] + "\n" + quaternions[3] + "\n" + "Rotation \n"
                 + "X: " + rotation[0] + "\nY: " + rotation[1] + "\nZ: "
                 + rotation[2]);
+
     }
 
     /**
