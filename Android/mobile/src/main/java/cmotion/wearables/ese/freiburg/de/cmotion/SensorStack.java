@@ -15,6 +15,7 @@ import android.util.Log;
  * should be the same and the data will be updated.
  * 
  * Currently removing sensor data resp. devices from stack is not provided!
+ * But a sensor can set to sleep though.
  *
  */
 public class SensorStack {
