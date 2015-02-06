@@ -376,11 +376,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         this.txtSensorData.setText("Rotation X: " + (int) (rotation[0] * 1000)
                 + "\n" + "Rotation Y: " + ((int) (rotation[1] * 1000)) + "\n"
-                + "Rotation Z: " + ((int) (rotation[2] * 1000)) + "\n"
-                + "\n\n\n" + quaternions[0] + "\n" + quaternions[1] + "\n"
-                + quaternions[2] + "\n" + quaternions[3] + "\n" + "Rotation \n"
-                + "X: " + rotation[0] + "\nY: " + rotation[1] + "\nZ: "
-                + rotation[2]);
+                + "Rotation Z: " + ((int) (rotation[2] * 1000))
+                + "\n\nQuaternions: \n" + quaternions[0] + "\n" + quaternions[1] + "\n"
+                + quaternions[2] + "\n" + quaternions[3] + "\n");
 
     }
 
