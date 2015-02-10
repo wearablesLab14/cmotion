@@ -83,7 +83,7 @@ public class SendQuaternionUDPTask extends AsyncTask<Object, Object, Object> {
                 if (getCurrentTimeInMs() - msLastUpdateTime >= updateDelay) {
                     msLastUpdateTime = getCurrentTimeInMs();
 
-                    Log.v("FPS", fps() + " fps");
+                    //Log.v("FPS", fps() + " fps");
 
                     doSendUDPPacket();
 

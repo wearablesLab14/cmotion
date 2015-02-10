@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">CMotion NEW</string>
+    <string name="app_name">CMotion</string>
 
     <string name="btn_sending">stop</string>
     <string name="btn_duplicate">duplicate sensor</string>

@@ -3,8 +3,8 @@
     package="cmotion.wearables.ese.freiburg.de.cmotion" >
 
     <uses-sdk
-        android:minSdkVersion="14"
-        android:targetSdkVersion="20" />
+        android:minSdkVersion="18"
+        android:targetSdkVersion="18" />
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
