@@ -1,0 +1,10 @@
+EdisonArduino: Edison version with the same structure as the other Arduino programs (WLAN is an output)
+
+--- Versions with other structure ---
+
+EdisonSensorx68: Edison with WLAN and one MPU9150/6050 with address 0x68
+
+EdisonSensorx69: Edison with WLAN and one MPU9150/6050 with address 0x69
+
+EdisonFull: Edison with Serial, WLAN and one sensor
+

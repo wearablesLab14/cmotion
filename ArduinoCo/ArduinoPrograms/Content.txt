@@ -1,0 +1,5 @@
+ArduinoBT1: Small version with one Seeedstudio IMU 9DOF and Bluetooth (name QuaternionBT1)
+
+ArduinoBT2: Small version with one Seeedstudio IMU 9DOF and Bluetooth (name QuaternionBT2)
+
+ArduinoFull: Version with all available sensors and outputs. Note that they can't be used at the same time (program gets too big)
