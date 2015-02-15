@@ -1,0 +1,1 @@
+Left and right is swaped in the .dae and .blend files
