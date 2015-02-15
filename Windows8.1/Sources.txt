@@ -1,0 +1,15 @@
+Sources used:
+______________________________________________________________________________________________________________________________________________
+
+App-template / Sensor:
+Universal Windows app samples (https://code.msdn.microsoft.com/universal-windows-app-cb3248c3), Accelerometer sensor sample, OrientationSensor sample
+
+wlan:
+http://metronuggets.com/2013/03/18/how-to-send-and-receive-a-udp-broadcast-in-windows-phone-8-and-win8/
+
+bluetooth:
+Bluetooth communication between Arduino and Windows 8.1 (https://code.msdn.microsoft.com/Bluetooth-communication-7130c260)
+
+BLE:
+http://forum.rfduino.com/index.php?topic=349.0
+http://talkingaboutit.azurewebsites.net/post/windows-phone-8-1-ble-communications-part-2 (Part 1 also interesting if you don't know the UUID's of a device)

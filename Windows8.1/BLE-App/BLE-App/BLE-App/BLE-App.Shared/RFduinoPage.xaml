@@ -1,0 +1,42 @@
+﻿<Page
+    x:Class="RfduinoBleApp.RFduinoPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:RfduinoBleApp"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel Margin="0,74,0,-125">
+            <TextBlock Text="BLE" FontSize="24"></TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <ToggleButton x:Name="receiveButton" Content="Receive" Checked="receiveButton_Checked"  Width="100" IsChecked="False"></ToggleButton>
+                <Button x:Name="getGATTButton" Content="get GATT" Click="getGATTButton_Click" Width="100"/>
+                <TextBlock Height="40">
+                    proof if device still <LineBreak/>
+                    connected (only with receive off), <LineBreak/>
+                    loads GATT-characteristic
+                </TextBlock>
+            </StackPanel>
+            <TextBlock Text="Message Received:" FontSize="18"/>
+            <TextBlock x:Name="receivedMessage" FontSize="18"/>
+            <TextBlock x:Name="messagesPerSecond" FontSize="18"/>
+            <ScrollViewer x:Name="infos" Height="70"/>
+            <StackPanel>
+                <ToggleButton x:Name="sendOrientation" Content="O-Sensor" Checked="sendOrientation_Checked" Unchecked="sendOrientation_Unchecked" Width="100"></ToggleButton>
+            </StackPanel>
+            <TextBlock Text="Quaternions:" FontSize="18"/>
+            <ScrollViewer Height="70">
+                <TextBlock x:Name="quaternionsDisplay" TextWrapping="Wrap"/>
+            </ScrollViewer>
+            <StackPanel Orientation="Horizontal">
+                <ToggleButton x:Name="wlanSendButton" Checked="StartSendWlan" Content="Wlan" Width="100"/>
+                <ToggleButton x:Name="sendDebugButton" Checked="SendDebugButton" Content="Debug Wlan" Width="100"/>
+                <TextBlock x:Name="sendTimeText" Text="Nothing yet"  Width="200" Margin="0,10,0,10"/>
+            </StackPanel>
+            <TextBox x:Name="portNameBox" LostFocus="portName_LostFocus"/>
+            <TextBox x:Name="hostNameBox" LostFocus="hostNameBox_LostFocus"/>
+        </StackPanel>
+    </Grid>
+</Page>

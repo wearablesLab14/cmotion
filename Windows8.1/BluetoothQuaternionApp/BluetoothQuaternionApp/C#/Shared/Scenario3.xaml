@@ -1,0 +1,61 @@
+﻿<!--
+//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+-->
+<Page
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:BluetoothApp"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:SDKTemplate="using:SDKTemplate"
+      x:Class="BluetoothApp.Scenario3"
+      mc:Ignorable="d">
+
+    <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!--the StackPanel below contains the Connect/Cancel/Disconnect Buttons. They are bound to the BluetoothManager and use the UIConverter to enable/disable-->
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" DataContext="{StaticResource BluetoothManager1}">
+                    <TextBlock Text="Connections" Style="{StaticResource SubheaderTextBlockStyle}" Margin="0,0,0,10" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" DataContext="{StaticResource BluetoothManager1}" HorizontalAlignment="Center">
+                    <Button Content="Connect" IsEnabled="{Binding State, ConverterParameter=BluetoothConnect, Converter={StaticResource UIConverter}}" Width="100" Click="BluetoothConnect1_Click" />
+                    <Button Content="Cancel" Command="{Binding BluetoothCancelCommand}" IsEnabled="{Binding State, ConverterParameter=BluetoothConnecting, Converter={StaticResource UIConverter}}" Width="100" />
+                    <Button x:Name="disconnectButton" Content="Disconnect" Command="{Binding BluetoothDisconnectCommand}" IsEnabled="{Binding State, ConverterParameter=BluetoothDisconnect, Converter={StaticResource UIConverter}}" />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="sendXButton" Click="SendXButton1_Click" Content="Send x" Width="100"/>
+            </StackPanel>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" DataContext="{StaticResource BluetoothManager2}" HorizontalAlignment="Center">
+                    <Button Content="Connect" IsEnabled="{Binding State, ConverterParameter=BluetoothConnect, Converter={StaticResource UIConverter}}" Width="100" Click="BluetoothConnect2_Click" />
+                    <Button Content="Cancel" Command="{Binding BluetoothCancelCommand}" IsEnabled="{Binding State, ConverterParameter=BluetoothConnecting, Converter={StaticResource UIConverter}}" Width="100" />
+                    <Button Content="Disconnect" Command="{Binding BluetoothDisconnectCommand}" IsEnabled="{Binding State, ConverterParameter=BluetoothDisconnect, Converter={StaticResource UIConverter}}" />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="sendXButton2" Click="SendXButton2_Click" Content="Send x" Width="100"/>
+            </StackPanel>
+            <StackPanel>
+                <ToggleButton x:Name="sendOrientation" Content="O-Sensor" Checked="sendOrientation_Checked" Unchecked="sendOrientation_Unchecked" Width="100"></ToggleButton>
+            </StackPanel>
+            <ScrollViewer x:Name="scrollViewer" Height="100" Margin="0,10" FontSize="14">
+                <TextBlock x:Name="console" TextWrapping="Wrap"/>
+            </ScrollViewer>
+            <StackPanel Orientation="Horizontal">
+                <ToggleButton x:Name="wlanSendButton" Checked="StartSendWlan" Content="Wlan" Width="100"/>
+                <ToggleButton x:Name="sendDebugButton" Checked="SendDebugButton" Content="Debug Wlan" Width="100"/>
+                <TextBlock x:Name="sendTimeText" Text="Nothing yet"  Width="200" Margin="0,10,0,10"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>
